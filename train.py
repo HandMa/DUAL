@@ -57,8 +57,6 @@ def test_AE_withC(net, train_data, test_data, train_label, test_label, f):
     s1 = (s1 - np.min(s1)) / (np.max(s1) - np.min(s1))
     s2 = (s2 - np.min(s2)) / (np.max(s2) - np.min(s2))
 
-    s1 = np.sum(C1, 0)
-    s2 = np.sum(C2, 0)
     s_ours = np.argsort(-(s1+s2))
 
     clr = SVC(C=100, kernel='linear')
