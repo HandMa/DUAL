@@ -92,28 +92,13 @@ if __name__ == '__main__':
     
     feature = torch.Tensor(train_data)
     feature_ = torch.Tensor(test_data)
+    
+    if torch.cuda.is_available():
+        feature = feature.cuda()
+        feature_ = feature_.cuda()
 
     batch_size = len(feature)
     print('Done!')
-
-    print('Inti Net....')
-    net = AutoEncoder(batch_size, config.getint('trainsetting', 'k'), json.loads(config.get('trainsetting','layers')))
-    pre_dict = torch.load(config['path']['model_load_path'] + 'only_AE.pt')
-    model_dict = net.state_dict()
-    pre_dict = {k: v for k, v in pre_dict.items() if (k in model_dict) and (k not in ['coeff', 'coeff_cluster', 'kmeans'])}
-    model_dict.update(pre_dict)
-    net.load_state_dict(model_dict)
-
-    if torch.cuda.is_available():
-        net = net.cuda()
-        feature = feature.cuda()
-        feature_ = feature_.cuda()
-    print('Done!')
-
-    net.eval()
-    train_data = net.encoder(feature).cpu().detach().numpy()
-    test_data = net.encoder(feature_).cpu().detach().numpy()
-
 
     p_q = json.loads(config.get('trainsetting','p_q'))
     p_Rq = json.loads(config.get('trainsetting','p_Rq'))
@@ -124,6 +109,22 @@ if __name__ == '__main__':
             f = open(config['path']['log_save_path'] + 'results.txt', 'a')
             parameter = 'Q:' + str(i) + '  ' + 'RQ:' + str(j) + '\n'
             # f.write(parameter)
+            
+            print('Inti Net....')
+            net = AutoEncoder(batch_size, config.getint('trainsetting', 'k'), json.loads(config.get('trainsetting','layers')))
+            pre_dict = torch.load(config['path']['model_load_path'] + 'only_AE.pt')
+            model_dict = net.state_dict()
+            pre_dict = {k: v for k, v in pre_dict.items() if (k in model_dict) and (k not in ['coeff', 'coeff_cluster', 'kmeans'])}
+            model_dict.update(pre_dict)
+            net.load_state_dict(model_dict)
+            
+            if torch.cuda.is_available():
+                net = net.cuda()
+            print('Done!')
+
+            net.eval()
+            train_data = net.encoder(feature).cpu().detach().numpy()
+            test_data = net.encoder(feature_).cpu().detach().numpy()
 
             net = train_AE_withC(net, feature, i, j, config)
             net = test_AE_withC(net, train_data, test_data, train_label, test_label, f)
